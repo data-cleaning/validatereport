@@ -1,4 +1,8 @@
 
+
+
+
+
 get_event <- function( time = as.character(Sys.time())
           , actor=NULL, agent="", trigger=""){
 
@@ -31,12 +35,30 @@ get_data <- function(dat, key){
   )
 }
 
+#' Convert validation results to ESS JSON standard
+#' 
+#' @param validation An object of class \code{\link[validate]{validation}}
+#' @param rules An object of class \code{\link[validate]{validator}}
+#' 
+#' @export
+#' @rdname ess_json
+ess_data_frame <- function(confrontation, rules, id = NULL , ...){
+  id <- if (is.null(id)) strftime(Sys.time(),"VALIDATION-%Y%m%dT%H:%M:%S") else id
+  out <- merge(
+    validate::as.data.frame(rules)
+    , validate::as.data.frame(confrontation))
+  out <- cbind(out,...)
+  attr(out,"id") <- id
+  out
+}
 
-validation_to_json <- function(confrontation, validator, id="7"){
-  d <- merge(validate::as.data.frame(confrontation), validate::as.data.frame(validator))
+
+#' @param dat Output of a call to \code{ess_data_frame}
+#' @export
+ess_json <- function(dat){
   event <- get_event()
-  rule <- get_rule(d)
-  data <- get_data(d, key=confrontation$._key)
+  rule <- get_rule(dat)
+  data <- get_data(dat, key=dat$key)
   
   json <- sprintf(validation_template()
       , id

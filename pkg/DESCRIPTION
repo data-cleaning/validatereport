@@ -16,4 +16,4 @@ BugReports: https://github.com/data-cleaning/validatereport/issues
 Date: 2017-08-02
 Imports: graphics
 Suggests: testthat
-
+RoxygenNote: 6.0.1
