@@ -41,7 +41,7 @@ ess_json_schema <- function(version="1.0.0"){
     ess_json_schema_1.0.0
   } else {
     warning("Unknown scheme version")
-    NULL
+    invisible(NULL)
   }
 }
 

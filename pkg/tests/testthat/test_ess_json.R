@@ -14,5 +14,5 @@ test_that("translation to json follows ESS JSON scheme",{
   if (require(jsonvalidate)){
     expect_true(json_validate(json, ess_json_schema()))
   }
-  
+  expect_warning(ess_json_schema(version = "foo"))
 })
