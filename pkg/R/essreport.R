@@ -33,12 +33,28 @@ get_data <- function(dat, key){
   )
 }
 
+#' @param version \code{[character]} Version of reporting scheme.
+#' @rdname ess_json
+#' @export
+ess_json_schema <- function(version="1.0.0"){
+  if (version == "1.0.0"){
+    ess_json_schema_1.0.0
+  } else {
+    warning("Unknown scheme version")
+    NULL
+  }
+}
+
+
 #' Convert validation results to ESS JSON standard
+#' 
+#' 
+#' 
 #' 
 #' @param validation An object of class \code{\link[validate]{validation}}
 #' @param rules An object of class \code{\link[validate]{validator}}
-#' @param id An identifying key for the report
-#' @param ... extra columns, binded to the output with \code{cbind}
+#' @param id \code{[character]} An identifying key for the report
+#' @param ... extra columns, added to the output with \code{cbind}
 #' 
 #' 
 #' @export
@@ -48,7 +64,7 @@ ess_data_frame <- function(validation, rules, id = NULL , ...){
     validate::as.data.frame(rules)
     , validate::as.data.frame(validation))
   # key for validation result. Important only for aggregates
-  out$id <- sprintf("$05d",seq_len(nrow(out)))
+  out$id <- sprintf("%05d",seq_len(nrow(out)))
   out <- cbind(out,...)
   # name of column containing the data key
   attr(out,"key") <- validation$._key
@@ -56,19 +72,28 @@ ess_data_frame <- function(validation, rules, id = NULL , ...){
 }
 
 
-#' @param dat Output of a call to \code{ess_data_frame}
+#' @param dat \code{[data.frame]} Output of a call to \code{ess_data_frame}
 #' @export
 #' 
 #' @examples
+#' 
 #' data(retailers,package="validate")
+#' retailers$primkey <- sprintf("REC%02d",seq_len(nrow(retailers)))
 #' v <- validator(
 #'   turnover >= 0
 #'   , total.costs + profit == turnover
 #'   , mean(turnover,na.rm=TRUE) >= 0 
 #' )
-#' cf <- confront(v, retailers)
-#' dat <- ess_data_frame(v, cf, id="my_validation")
-#' ess_json(dat)
+#' cf <- validate::confront(retailers, v, key="primkey")
+#' dat <- ess_data_frame(cf, v, id="my_validation")
+#' json_string <- ess_json(dat)
+#' 
+#' # if the jsonvalidate package is installed, the 
+#' # json string can be checked against the schema.
+#' if(require(jsonvalidate)){
+#'   json_validate(json_string, schema=ess_json_schema())
+#' }
+#' 
 ess_json <- function(dat){
   event <- get_event()
   rule <- get_rule(dat)

@@ -15,5 +15,5 @@ URL: https://github.com/data-cleaning/validatereport
 BugReports: https://github.com/data-cleaning/validatereport/issues
 Date: 2017-08-02
 Imports: graphics
-Suggests: testthat
+Suggests: testthat, jsonvalidate
 RoxygenNote: 6.0.1
