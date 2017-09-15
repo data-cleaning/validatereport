@@ -27,11 +27,7 @@ json <- ess_json(dat)
 cat(json)
 
 
-schema <- paste(
-  readLines("https://raw.githubusercontent.com/data-cleaning/ValidatReport/master/json/validation_report.json")
-  , collapse="\n")
-
-json_validate(json, schema)
+json_validate(json, schema=ess_json_schema())
 
 
 ```
