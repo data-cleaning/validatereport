@@ -1,5 +1,20 @@
 #' @import validate
 
+# control characters are not allowed in JSON so we replace
+# newline with literal '\n' and remove carriage return 
+cleanish <- function(str){
+  str <- gsub("\n","\\\\n",str)
+  gsub("\r","",str)
+}
+
+unwrap <- function(d){
+  for (i in seq_along(d)){
+    if(is.character(d[,i])) 
+      d[,i] <- cleanish(d[,i]) 
+  }
+  d
+}
+
 get_event <- function( time = as.character(Sys.time())
           , actor=NULL, agent="", trigger=""){
 
@@ -95,6 +110,7 @@ ess_data_frame <- function(validation, rules, id = NULL , ...){
 #' }
 #' 
 ess_json <- function(dat){
+  dat <- unwrap(dat)
   event <- get_event()
   rule <- get_rule(dat)
   data <- get_data(dat, key=attr(dat,"key"))

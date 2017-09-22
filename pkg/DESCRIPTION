@@ -14,6 +14,5 @@ Depends: R (>= 3.1.3), validate (>= 0.2.0)
 URL: https://github.com/data-cleaning/validatereport
 BugReports: https://github.com/data-cleaning/validatereport/issues
 Date: 2017-08-02
-Imports: graphics
 Suggests: testthat, jsonvalidate
 RoxygenNote: 6.0.1
