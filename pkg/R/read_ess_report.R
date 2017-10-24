@@ -119,7 +119,25 @@ as_markdown.vrs <- function(x, author=Sys.info()["user"], ...){
   md.str %+=% "\nResults by severity (possibly after change):\n"
   tab <- addmargins(table(severity = x$rule.severity, result = x$value))
   md.str %+=% paste(knitr::kable(tab,format="markdown", caption="Results by severity"), collapse="\n")
+
+  md.str %+=% "\n## Results by rule:\n"
+  i <- 0
+  for ( rl in unique(x$rule.expression)){
+    i = i + 1
+    y <- x[x$rule.expression == rl,]
+    md.str %+=% "------------------------------------------------------------\n"
+    md.str %+=% sprintf("\n**Rule %03d: Description:**\n",i)
+    md.str %+=% y$rule.description[1]
+    md.str %+=% "\n**Expression:**\n"
+    md.str %+=% "\n```"
+    md.str %+=% rl
+    md.str %+=% "```\n"
+    md.str %+=% "\n\n**Results:**\n\n"
+    tab <- as.data.frame(t(as.matrix(addmargins(table(value = y$value)))))
+    md.str %+=% paste(knitr::kable(tab, format="markdown"),collapse="\n")
+  }
   
+    
   md.str
   
 }

@@ -3,8 +3,12 @@
 # control characters are not allowed in JSON so we replace
 # newline with literal '\n' and remove carriage return 
 cleanish <- function(str){
+  # replace newline with '\n'
   str <- gsub("\n","\\\\n",str)
-  gsub("\r","",str)
+  # replace tab with '\n'
+  str <- gsub("\t","\\\\t",str)
+  # replace carriage return with '\r'
+  gsub("\r","\\\\r", str)
 }
 
 unwrap <- function(d){
@@ -48,22 +52,9 @@ get_data <- function(dat, key){
   )
 }
 
-#' @param version \code{[character]} Version of reporting scheme.
-#' @rdname ess_json
-#' @export
-ess_json_schema <- function(version="1.0.0"){
-  if (version == "1.0.0"){
-    ess_json_schema_1.0.0
-  } else {
-    warning("Unknown scheme version")
-    invisible(NULL)
-  }
-}
 
 
 #' Convert validation results to ESS JSON standard
-#' 
-#' 
 #' 
 #' 
 #' @param validation An object of class \code{\link[validate]{validation}}
@@ -109,7 +100,7 @@ ess_data_frame <- function(validation, rules, id = NULL , ...){
 #'   json_validate(json_string, schema=ess_json_schema())
 #' }
 #' 
-ess_json <- function(dat){
+ess_validation_report <- function(dat){
   dat <- unwrap(dat)
   event <- get_event()
   rule <- get_rule(dat)
@@ -136,6 +127,20 @@ ess_json <- function(dat){
       , sprintf("%s", as.integer(dat$value))
   )
   paste0("[", paste(json, collapse=","),"]")
+}
+
+#' Write to validation report structure
+#'
+#' @param validation An object of class \code{\link[validate]{validation}}
+#' @param A connection, or a character string naming the file to write to. Passed through
+#' to \code{\link[base]{write}}.
+#' @param ... options passed to \link{ess_data_frame}.
+#' 
+#' 
+#' @family IO
+#' @export
+write_vrs <- function(validation, file, ...){
+  write(ess_json(ess_data_frame(validation,...)), file=file)
 }
 
 

@@ -10,7 +10,7 @@ test_that("translation to json follows ESS JSON scheme",{
   )
   cf <- confront(retailers,v, key="primkey")
   dat <- ess_data_frame(cf,v)
-  json <- ess_json(dat)
+  json <- ess_validation_report(dat)
   if (require(jsonvalidate)){
     expect_true(json_validate(json, ess_json_schema()))
   }
