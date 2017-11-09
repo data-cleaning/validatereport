@@ -23,7 +23,7 @@ v <- validator(
 )
 cf <- confront(retailers,v)
 dat <- ess_data_frame(cf,v)
-json <- ess_json(dat)
+json <- ess_validation_report(dat)
 cat(json)
 
 
