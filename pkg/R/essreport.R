@@ -1,4 +1,5 @@
 #' @import validate
+{}
 
 # control characters are not allowed in JSON so we replace
 # newline with literal '\n' and remove carriage return 
@@ -64,7 +65,7 @@ get_data <- function(dat, key){
 #' 
 #' 
 #' @export
-#' @rdname ess_json
+#' @rdname ess_validation_report
 ess_data_frame <- function(validation, rules, id = NULL , ...){
   out <- merge(
     validate::as.data.frame(rules)
@@ -77,7 +78,8 @@ ess_data_frame <- function(validation, rules, id = NULL , ...){
   out
 }
 
-
+#' Generate ESS validation report structure.
+#' 
 #' @param dat \code{[data.frame]} Output of a call to \code{ess_data_frame}
 #' @export
 #' 
@@ -92,7 +94,7 @@ ess_data_frame <- function(validation, rules, id = NULL , ...){
 #' )
 #' cf <- validate::confront(retailers, v, key="primkey")
 #' dat <- ess_data_frame(cf, v, id="my_validation")
-#' json_string <- ess_json(dat)
+#' json_string <- ess_validation_report(dat)
 #' 
 #' # if the jsonvalidate package is installed, the 
 #' # json string can be checked against the schema.
@@ -120,8 +122,8 @@ ess_validation_report <- function(dat){
       , rule$description
       , rule$status
       # data
-      , data$source
-      , data$target
+      , enquote(data$source)
+      , enquote(data$target)
       , data$description
       # value
       , sprintf("%s", as.integer(dat$value))
@@ -129,10 +131,17 @@ ess_validation_report <- function(dat){
   paste0("[", paste(json, collapse=","),"]")
 }
 
+enquote <- function(x){
+  str <- strsplit(x,",")
+  sapply(str,function(x){
+    paste0('"',trimws(x),'"',collapse=", ")
+  })
+}
+
 #' Write to validation report structure
 #'
 #' @param validation An object of class \code{\link[validate]{validation}}
-#' @param A connection, or a character string naming the file to write to. Passed through
+#' @param file A connection, or a character string naming the file to write to. Passed through
 #' to \code{\link[base]{write}}.
 #' @param ... options passed to \link{ess_data_frame}.
 #' 
@@ -140,7 +149,7 @@ ess_validation_report <- function(dat){
 #' @family IO
 #' @export
 write_vrs <- function(validation, file, ...){
-  write(ess_json(ess_data_frame(validation,...)), file=file)
+  write(ess_validation_report(ess_data_frame(validation,...)), file=file)
 }
 
 
@@ -162,8 +171,8 @@ validation_template <- function(x){
     "status":      "%s"
   },
   "data": {
-    "source":      ["%s"],
-    "target":      ["%s"],
+    "source":      [%s],
+    "target":      [%s],
     "description": "%s"
   },
   "value": "%s"
