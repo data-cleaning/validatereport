@@ -1,0 +1,22 @@
+rules:
+- expr: turnover >= 0
+  name: Rule_01
+  label: 'turnover nonnegative'
+  description: 'Turnovers cannot be negative'
+  created: 2017-09-19 12:44:59
+  origin: command-line
+- expr: total.costs + profit == turnover
+  name: Rule_02
+  label: 'nonnegative costs'
+  description: 'Costs must be provided as a positive number'
+  created: 2017-09-19 12:44:59
+  origin: command-line
+- expr: mean(profit, na.rm = TRUE) >= 0
+  name: Rule_03
+  label: 'nonnegative mean profit'
+  description: | 
+      Individual profits may be negative but we 
+      expect a positive number population wide.
+  created: 2017-09-19 12:44:59
+  origin: command-line
+

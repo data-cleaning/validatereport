@@ -113,8 +113,8 @@ ess_validation_report <- function(dat){
       # event
       , event$time
       , event$actor
-      , event$agent
-      , event$trigger
+      , dat$agent
+      , dat$trigger
       # rule
       , rule$language
       , rule$expression

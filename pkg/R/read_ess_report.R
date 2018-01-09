@@ -123,7 +123,7 @@ md_rec <- function(x){
   md.str %+=% sprintf("- Target data    : %s",x[["data.target"]])
   md.str %+=% sprintf("- Data description:\n\n```\n%s\n\n```"
           , paste("  ",strwrap(x[["data.description"]],width=60),collapse="\n"))
-  md.str %+=% sprintf("- Rule           :")
+  md.str %+=% sprintf("- Rule          :")
   md.str %+=% sprintf("    - language  : %s",x[["rule.language"]])
   md.str %+=% sprintf("    - severity  : %s",x[["rule.severity"]])
   md.str %+=% sprintf("    - change    : %s",x[["rule.change"]])

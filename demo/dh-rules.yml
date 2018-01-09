@@ -1,0 +1,74 @@
+rules:
+- expr: staff >= 0
+  name: V01
+  label: 'nonnegative staff'
+  description: ''
+  created: 2018-01-09 09:09:44
+  origin: demo/dh-rules.R
+  meta: []
+- expr: turnover >= 0
+  name: V02
+  label: 'nonnegative turnover'
+  description: ''
+  created: 2018-01-09 09:09:44
+  origin: demo/dh-rules.R
+  meta: []
+- expr: other.rev >= 0
+  name: V03
+  label: 'nonnegative revenue'
+  description: ''
+  created: 2018-01-09 09:09:44
+  origin: demo/dh-rules.R
+  meta: []
+- expr: total.rev >= 0
+  name: V04
+  label: 'nonnegative revenue'
+  description: ''
+  created: 2018-01-09 09:09:44
+  origin: demo/dh-rules.R
+  meta: []
+- expr: staff.costs >= 0
+  name: V05
+  label: 'nonnnegative costs'
+  description: ''
+  created: 2018-01-09 09:09:44
+  origin: demo/dh-rules.R
+  meta: []
+- expr: total.costs >= 0
+  name: V06
+  label: 'nonnegative costs'
+  description: ''
+  created: 2018-01-09 09:09:44
+  origin: demo/dh-rules.R
+  meta: []
+- expr: turnover + other.rev == total.rev
+  name: V07
+  label: 'overall balance'
+  description: ''
+  created: 2018-01-09 09:09:44
+  origin: demo/dh-rules.R
+  meta: []
+- expr: total.costs > staff.costs
+  name: V08
+  label: 'cost plausibility'
+  description: ''
+  created: 2018-01-09 09:09:44
+  origin: demo/dh-rules.R
+  meta: []
+- expr: if (staff > 0) staff.costs > 0
+  name: V09
+  label: 'staf cost plausibility'
+  description: 'People do not work for free'
+  created: 2018-01-09 09:09:44
+  origin: demo/dh-rules.R
+  meta: []
+- expr: mean(profit, na.rm = TRUE) > 0
+  name: V10
+  label: 'profit plausibility'
+  description: | 
+      'Although some companies may loose money, we expect the branch to
+       be profitable overall.'
+  created: 2018-01-09 09:09:44
+  origin: demo/dh-rules.R
+  meta: []
+
