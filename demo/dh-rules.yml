@@ -2,56 +2,56 @@ rules:
 - expr: staff >= 0
   name: V01
   label: 'nonnegative staff'
-  description: ''
+  description: 'nonnegative staff'
   created: 2018-01-09 09:09:44
   origin: demo/dh-rules.R
   meta: []
 - expr: turnover >= 0
   name: V02
   label: 'nonnegative turnover'
-  description: ''
+  description: 'nonnegative turnover'
   created: 2018-01-09 09:09:44
   origin: demo/dh-rules.R
   meta: []
 - expr: other.rev >= 0
   name: V03
   label: 'nonnegative revenue'
-  description: ''
+  description: 'nonnegative revenue'
   created: 2018-01-09 09:09:44
   origin: demo/dh-rules.R
   meta: []
 - expr: total.rev >= 0
   name: V04
   label: 'nonnegative revenue'
-  description: ''
+  description: 'nonnegative revenue'
   created: 2018-01-09 09:09:44
   origin: demo/dh-rules.R
   meta: []
 - expr: staff.costs >= 0
   name: V05
   label: 'nonnnegative costs'
-  description: ''
+  description: 'nonnnegative costs'
   created: 2018-01-09 09:09:44
   origin: demo/dh-rules.R
   meta: []
 - expr: total.costs >= 0
   name: V06
   label: 'nonnegative costs'
-  description: ''
+  description: 'nonnegative costs'
   created: 2018-01-09 09:09:44
   origin: demo/dh-rules.R
   meta: []
 - expr: turnover + other.rev == total.rev
   name: V07
   label: 'overall balance'
-  description: ''
+  description: 'overall balance'
   created: 2018-01-09 09:09:44
   origin: demo/dh-rules.R
   meta: []
 - expr: total.costs > staff.costs
   name: V08
   label: 'cost plausibility'
-  description: ''
+  description: 'cost plausibility'
   created: 2018-01-09 09:09:44
   origin: demo/dh-rules.R
   meta: []
