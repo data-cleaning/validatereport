@@ -1,35 +1,12 @@
+
+[![Build Status](https://travis-ci.org/data-cleaning/validatereport.svg?branch=master)](https://travis-ci.org/data-cleaning/validatereport) [![Coverage Status](https://coveralls.io/repos/github/data-cleaning/validatereport/badge.svg?branch=master)](https://coveralls.io/github/data-cleaning/validatereport?branch=master) ![CRAN version](http://www.r-pkg.org/badges/version/validatereport)
+
 # validatereport
 
-- Create attractive validation reports based on results from the [validate](https://cran.r-project.org/web/packages/validate/) package.
-- export validation results to [ESS JSON reporting standard](https://ec.europa.eu/eurostat/cros/system/files/20170815essnetvalidationwp2valreport_1.0.0.pdf) (pdf).
-- read validation results from ESS JSON reporting standard.
-
-### Example
-
-After cloning this repo, you can do the following.
-
-```r
-install.packages('validate')     # required for current work
-install.packages('jsonvalidate') # to check output
-
-devtools::load_all('pkg')
-library(jsonvalidate)
-
-data(retailers,package="validate")
-v <- validator(
-  turnover >= 0
-  , total.costs + profit == turnover
-  , mean(turnover,na.rm=TRUE) >= 0 
-)
-cf <- confront(retailers,v)
-dat <- ess_data_frame(cf,v)
-json <- ess_validation_report(dat)
-cat(json)
+- Export validation results from the [validate](https://cran.r-project.org/web/packages/validate/) package to [ESS JSON reporting standard](https://ec.europa.eu/eurostat/cros/system/files/20170815essnetvalidationwp2valreport_1.0.0.pdf) (pdf)
+- Read validation results from ESS JSON reporting standard.
+- Create attractive validation reports based on results from the [validate](https://cran.r-project.org/web/packages/validate/) package (EXPERIMENTAL)
 
 
-json_validate(json, schema=ess_json_schema())
-
-
-```
 
 
