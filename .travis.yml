@@ -14,7 +14,7 @@ r:
  - release
 
 before_install:
-  - R -e "install.packages(c('roxygen2','pkgload'))"
+  - R -e "install.packages(c('roxygen2','pkgload','jsonlite', 'jsonvalidate', 'knitr', 'rmarkdown'))"
   - R -e "pkgload::load_all('./pkg'); roxygen2::roxygenize('./pkg')"
   - cd ./pkg
 
