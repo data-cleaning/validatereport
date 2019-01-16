@@ -1,0 +1,34 @@
+
+# travis config
+
+dist: trusty
+language: r
+sudo: required
+
+addons:
+  apt:
+    packages:
+      - libxml2-dev
+
+r:
+ - release
+
+before_install:
+  - R -e "install.packages('roxygen2','pkgload')"
+  - R -e "pkgload::load_all('./pkg'); roxygen2::roxygenize('./pkg')"
+  - cd ./pkg
+
+r_packages:
+  - covr
+  - testthat
+
+
+after_success:
+  - Rscript -e 'library(covr);coveralls()'
+
+notifications:
+  email:
+    on_success: change
+    on_failure: change
+
+
