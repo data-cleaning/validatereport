@@ -1,6 +1,149 @@
 #' @import validate
 {}
 
+#' Create JSON validation report
+#' 
+#' Creates a machine-readable validation report according to the ESS 
+#' \href{../doc/validation_report_structure.pdf}{validation report structure}.
+#' 
+#' 
+#' @param validation Object of class \code{\link[validate]{validation}}
+#' @param rules Object of class \code{\link[validate]{validator}}
+#' @param population \code{[character]} Unique descriptor for the population 
+#'     from where the data originated.
+#' @param measurement \code{[character]} Unique descriptor for the event at 
+#'     which the data was collected.
+#'
+#' @return \code{[character]} A JSON string.
+#'
+#' @family ess_report
+#'
+#' @references 
+#' 
+#' M. van der Loo, O. ten Bosch (2017). Design of a generic machine-readable
+#' validation report structure, version 1.0. \href{../doc/validation_report_structure.pdf}{PDF}.
+#'
+#'
+ess_validation_report <- function(validation, rules
+                                , population = "", measurement="" ){
+  if ( is.null(validation$._key)){
+    stop("No primary key label found in validation object. 
+          Use validate::confront(...,key=)) to set a key.")
+  }
+  
+  if ( anyDuplicated(names(rules)) ){
+    dupnames <- names(rules)[duplicated(names(rules))]
+    stop(sprintf("Duplicate names in ruleset: %s"
+                 , paste(dupnames, collapse=", ")))
+  }
+  
+  # combine rules with validation output
+  dat <- merge( validate::as.data.frame(rules)
+              , validate::as.data.frame(validation) )
+  dat <- unwrap(dat)
+  
+  # replace empty keys with "" (meaning: all data items)
+  # TODO: formal getter for key.
+  keys <- dat[[validation$._key]]
+  dat[[validation$._key]] <- ifelse(is.na(keys), "", keys)
+  
+  # key for validation result. Important only for aggregates
+  dat$validation_id <- sprintf("%05d",seq_len(nrow(dat)))
+  
+  # create data identifying key lists (requires unique rule names)
+  rulevars <- variables(rules, as="list")[dat$name]
+  
+  dat$target <- sapply(seq_along(rulevars), function(i){
+    x <- paste0("["
+              ,       enquote(population)    # U
+              , ", ", enquote(measurement)   # t
+              , ", ", enquote(keys[i])     # u
+              , ", ", enquote(rulevars[[i]])        # X
+              , "]")   
+    paste("[ ",paste(x,collapse=", ")," ]")
+  })
+  
+  # TODO: allow for differences between source and target
+  dat$source <- dat$target
+  
+  event <- event(validation)
+  
+  json <- sprintf(validation_template()
+      , id = dat$validation_id
+      # event
+      , event['time']
+      , event['actor']
+      , event['agent']
+      , event['trigger']
+      # rule
+      , dat$language
+      , dat$expression
+      , dat$severity
+      , dat$description
+      # data
+      , dat$source
+      , dat$target
+      , dat$description
+      # value
+      , sprintf("%s", as.integer(dat$value))
+  )
+  paste0("[", paste(json, collapse=","),"]")
+}
+
+enquote <- function(x){
+  str <- strsplit(x,",")
+  sapply(str,function(x){
+    paste0('"',trimws(x),'"',collapse=", ")
+  })
+}
+
+#' Write to validation report structure
+#'
+#' @param validation An object of class \code{\link[validate]{validation}}
+#' @param rules  \code{\link[validate]{validator}}, used in the creating the validation
+#' @param file A connection, or a character string naming the file to write to. Passed through
+#' to \code{\link[base]{write}}.
+#' @param ... options passed to \link{ess_validation_report}.
+#' 
+#' @return The json string, invisibly
+#' 
+#' @family ess_report
+#' @export
+export_ess_validation_report <- function(validation, rules, file, ...){
+  stopifnot(inherits(validation,"validation"))
+  stopifnot(inherits(rules, "validator"))
+  report <- ess_validation_report(validation, rules, ...) 
+  # note: standard forces UTF-8.
+  write(enc2utf8(report), file=file)
+  invisible(report)
+}
+
+# Template to fill validation report v1.0
+validation_template <- function(x){
+'{
+  "id": "%s",
+  "type": "validation",
+  "event": {
+    "time":    "%s",
+    "actor":   "%s",
+    "agent":   "%s",
+    "trigger": "%s"
+  },
+  "rule": {
+    "language":    "%s",
+    "expression":  "%s",
+    "severity":    "%s",
+    "description": "%s"
+  },
+  "data": {
+    "source":      %s,
+    "target":      %s,
+    "description": "%s"
+  },
+  "value": "%s"
+}'
+}
+
 # control characters are not allowed in JSON so we replace
 # newline with literal '\n' and remove carriage return 
 cleanish <- function(str){
@@ -20,164 +163,43 @@ unwrap <- function(d){
   d
 }
 
-get_event <- function( time = as.character(Sys.time())
-          , actor=NULL, agent="", trigger=""){
 
-  if (is.null(actor)){
-    v <- R.Version()
-    actor <- sprintf("%s (%s) running on %s"
-            , v$version.string
-            , v$nickname
-            , v$platform)
-  }
-  
-  list(time=time, actor=actor, agent=agent, trigger=trigger)
-}
-
-get_rule <- function(dat,language="R package validate 0.2.0"){
-  list(
-      language    = language
-    , expression  = dat$expression
-    , severity    = "error"
-    , description = dat$description
-    , status      = ""
-  )
-}
-
-get_data <- function(dat, key){
-  src <- if (is.na(key)) "NA" else sprintf("%s",dat[,key])
-  list(
-      source = src
-    , target = if(is.null(dat$target)) src else dat$target
-    , description =  ""
-  )
-}
-
-
-
-#' Convert validation results to ESS JSON standard
+#' Receive ESS json schema definition string.
+#'
+#'
+#' @param version \code{[character]} Version of ESS sreporting scheme.
 #' 
-#' 
-#' @param validation An object of class \code{\link[validate]{validation}}
-#' @param rules An object of class \code{\link[validate]{validator}}
-#' @param id \code{[character]} An identifying key for the report
-#' @param ... extra columns, added to the output with \code{cbind}
-#' 
+#' @references 
+#' M. van der Loo and O. ten Bosch. Design of a generic machine-readable
+#' validation report structure. \href{../doc/validation_report_structure}{PDF}.
 #' 
 #' @export
-#' @rdname ess_validation_report
-ess_data_frame <- function(validation, rules, id = NULL , ...){
-  out <- merge(
-    validate::as.data.frame(rules)
-    , validate::as.data.frame(validation))
-  # key for validation result. Important only for aggregates
-  out$id <- sprintf("%05d",seq_len(nrow(out)))
-  out <- cbind(out,...)
-  # name of column containing the data key
-  attr(out,"key") <- validation$._key
-  out
+ess_json_schema <- function(version=c("1.0.1","1.0.0")){
+  version <- match.arg(version)
+  eval(parse(text=sprintf("ess_json_schema_%s",version)))
 }
 
-#' Generate ESS validation report structure.
+#' Check a json string against the ESS validation report json schema
+#'
+#' @param json \code{[character]} a \code{JSON} string.
+#' @param version \code{[character]} version of the ESS validation report definition.
 #' 
-#' @param dat \code{[data.frame]} Output of a call to \code{ess_data_frame}
+#' @return  A \code{logical} scalar. If \code{FALSE}, the error messages
+#' can be retrieved with \code{attr(value, "errors")}.
+#'
+#' @details 
+#' 
+#' See the \href{../doc/validation_report_structure.pdf}{vignette}.
+#'
+#' @family ess_report
+#'
 #' @export
-#' 
-#' @examples
-#' 
-#' data(retailers,package="validate")
-#' retailers$primkey <- sprintf("REC%02d",seq_len(nrow(retailers)))
-#' v <- validator(
-#'   turnover >= 0
-#'   , total.costs + profit == turnover
-#'   , mean(turnover,na.rm=TRUE) >= 0 
-#' )
-#' cf <- validate::confront(retailers, v, key="primkey")
-#' dat <- ess_data_frame(cf, v, id="my_validation")
-#' json_string <- ess_validation_report(dat)
-#' 
-#' # if the jsonvalidate package is installed, the 
-#' # json string can be checked against the schema.
-#' if(require(jsonvalidate)){
-#'   json_validate(json_string, schema=ess_json_schema())
-#' }
-#' 
-ess_validation_report <- function(dat){
-  dat <- unwrap(dat)
-  event <- get_event()
-  rule <- get_rule(dat)
-  data <- get_data(dat, key=attr(dat,"key"))
-  
-  json <- sprintf(validation_template()
-      , id = dat$id
-      # event
-      , event$time
-      , event$actor
-      , dat$agent
-      , dat$trigger
-      # rule
-      , rule$language
-      , rule$expression
-      , rule$severity
-      , rule$description
-      , rule$status
-      # data
-      , enquote(data$source)
-      , enquote(data$target)
-      , data$description
-      # value
-      , sprintf("%s", as.integer(dat$value))
-  )
-  paste0("[", paste(json, collapse=","),"]")
-}
-
-enquote <- function(x){
-  str <- strsplit(x,",")
-  sapply(str,function(x){
-    paste0('"',trimws(x),'"',collapse=", ")
+is_ess_report <- function(json, version=c("1.0.1","1.0.0")){
+  version <- match.arg(version)
+  schema <- ess_json_schema(version)
+  tryCatch( jsonvalidate::json_validate(json, schema, verbose=TRUE)
+        , error=function(e){
+          stop("Validation against ESS json schema stopped.:\n %s",e$message)
   })
 }
-
-#' Write to validation report structure
-#'
-#' @param validation An object of class \code{\link[validate]{validation}}
-#' @param file A connection, or a character string naming the file to write to. Passed through
-#' to \code{\link[base]{write}}.
-#' @param ... options passed to \link{ess_data_frame}.
-#' 
-#' 
-#' @family IO
-#' @export
-write_vrs <- function(validation, file, ...){
-  write(ess_validation_report(ess_data_frame(validation,...)), file=file)
-}
-
-
-validation_template <- function(x){
-'{
-  "id": "%s",
-  "type": "validation",
-  "event": {
-    "time":    "%s",
-    "actor":   "%s",
-    "agent":   "%s",
-    "trigger": "%s"
-  },
-  "rule": {
-    "language":    "%s",
-    "expression":  "%s",
-    "severity":    "%s",
-    "description": "%s",
-    "status":      "%s"
-  },
-  "data": {
-    "source":      [%s],
-    "target":      [%s],
-    "description": "%s"
-  },
-  "value": "%s"
-}'
-}
-
-
 

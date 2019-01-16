@@ -1,17 +1,8 @@
 
-### Running the demo .R files
+### Demo scripts
 
-You need to install some R packages in the following way
+Demo scripts for the `validatereport` package.
 
-```r
-# install validate and drat
-install.packages(c("validate","drat"))
-
-# install the PoC package 'validatereport'
-drat::addRepo("data-cleaning")
-install.packages("validatereport")
-```
-
-
-
+Old scripts (prior to 2019) have been deleted as they no longer work with the PoC
+version of the package.
 

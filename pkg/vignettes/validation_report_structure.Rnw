@@ -1,6 +1,6 @@
 \documentclass{article}
 \usepackage{pdfpages}
-%\VignetteIndexEntry{author2019mypaper}
+%\VignetteIndexEntry{Design of a generic machine-readable validation report structure}
 
 \begin{document}
 \includepdf[pages=-, fitpaper=true]{validationreport.pdf}

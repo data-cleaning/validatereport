@@ -1,67 +1,41 @@
-#' @import rmarkdown
+#' @importFrom utils capture.output
 {}
 
-
-#' Receive ESS json schema definition string.
-#'
-#' @note Currently only version 1.0.0 is supported.
-#'
-#' @param version \code{[character]} Version of reporting scheme.
-#' 
-#' @references 
-#' M. van der Loo and O. ten Bosch. Design of a generic machine-readable
-#' validation report structure. Version 1.0.0. 
-#' \href{https://github.com/data-cleaning/ValidatReport}{link}.
-#' 
-#' @export
-ess_json_schema <- function(version="1.0.0"){
-  if (version == "1.0.0"){
-    ess_json_schema_1.0.0
-  } else {
-    warning("Unknown scheme version")
-    invisible(NULL)
-  }
-}
-
-check_ess_json <- function(txt,version,...){
-  schema <- ess_json_schema(version)
-  v <- tryCatch( jsonvalidate::json_validate(txt, schema, verbose=TRUE)
-        , error=function(e){
-          stop("Validation against ESS json schema stopped.:\n %s",e$message)
-        })
-  if (!v){
-    warning("This is not a valid ESS json validation report structure:\n")
-    print(attr(v,"errors"))
-  } 
-  invisible(NULL)
-}
-
-
-#' Read ESS validation report structure
+#' Read ESS validation report structure (beta)
 #'
 #' @param file \code{[character]} file An URL or file location
 #' @param check \code{[check]} logical Toggle checking against json schema.
-#' @param ... options passed to \code{\link[base]{readLines}}
+#' @param version \code{[character]]} version of ESS reporting scheme.
 #' 
-#' @family IO
+#' @details 
+#' 
+#' If \code{check=TRUE}, the input file is tested against the json schema
+#' using package \pkg{jsonvalidate}.
+#' 
+#' @family ess_report
 #'
-#' @return A \code{data.frame} of class \code{vrs}.
+#' @return A \code{data.frame}.
 #'  
 #' @export
-read_vrs <- function(file, check=TRUE, ...){
-  txt <- paste0(readLines(file,...),collapse="\n")
-  parse_ess_validation_report(txt,check=check)
-}
-
-#' Parse ess json validation report.
-#'
-#' @param txt \code{[character]} json validation report string
-#' @param check \code{[logical]} toggle check against json schema
-#' @param version \code{[character]} json schema version to check against
-#' 
-#' @return Object of class \code{c("vrs","data.frame")} 
-parse_ess_validation_report <- function(txt, check=TRUE, version="1.0.0"){
-  if ( check ) check_ess_json(txt, version=version) 
+read_ess_validation_report <- function(file, check=TRUE, version=c("1.0.1","1.0.0")){
+  
+  # Input checks
+  version <- match.arg(version)
+  txt <- paste0(readLines(file, encoding = "UTF-8"),collapse="\n")
+   
+  if ( !validUTF8(txt) ){
+    message("The submitted text is not valid UTF-8. Continuing, but results could be b0rked.")
+  }
+  
+  if ( check && !(tst <- is_ess_report(txt, version=version)) ){
+    msg1 <- sprintf(
+      "%s does not comply with ESS validation report structure version %s"
+      , file, version)
+    msg2 <- paste(capture.output(print(attr(tst,"errors"))), collapse="\n")
+    stop(sprintf("%s:\n%s\n", msg1, msg2))
+  }
+  
+  # Parse report
   a <- jsonlite::fromJSON(txt,flatten = TRUE)
   a$data.source <- gsub("c\\((.*)\\)","[\\1]",a$data.source)
   a$data.target <- gsub("c\\((.*)\\)","[\\1]",a$data.target)
@@ -76,141 +50,7 @@ parse_ess_validation_report <- function(txt, check=TRUE, version="1.0.0"){
     a$data.source <- sapply(a$data.source, function(x){
       paste0("[",paste(x,collapse=","),"]")
     })
-  }  
+  }
   
-  class(a) <- c("vrs",class(a)) 
   a
 }
-
-# easy line concatenation
-`%+=%` <- function(lhs,rhs){
-  out_var <- as.character(sys.call()[[2]])
-  str <- paste0(lhs, "\n", rhs)
-  assign(out_var, str,pos=parent.frame())
-}
-
-
-#' Create a human-readable report
-#' 
-#' @param x an object to be downmarked
-#' @param ... Currently not used
-#' 
-#' @export
-as_markdown <- function(x,...){
-  # generic, so we can overload for json string, 'validation' objects.
-  UseMethod("as_markdown")
-}
-
-#' @rdname as_markdown
-#' @export
-as_markdown.vrs <- function(x,...){
-  md.str <- ""
-  for (i in seq_len(nrow(x))){
-    md.str %+=% md_rec(x[i,])
-  }
-  md.str
-}
-
-
-md_rec <- function(x){
-  md.str <- sprintf("\n- Event id       : %s",x[["id"]] )
-  md.str %+=% sprintf("      - type     : %s",x[["type"]])
-  md.str %+=% sprintf("      - actor    : %s",x[["event.actor"]])
-  md.str %+=% sprintf("      - agent    : %s",x[["event.agent"]])
-  md.str %+=% sprintf("      - trigger  : %s",x[["event.trigger"]])
-  md.str %+=% sprintf("- Value          : %s",x[["value"]])
-  md.str %+=% sprintf("- Source data    : %s",x[["data.source"]])
-  md.str %+=% sprintf("- Target data    : %s",x[["data.target"]])
-  md.str %+=% sprintf("- Data description:\n\n```\n%s\n\n```"
-          , paste("  ",strwrap(x[["data.description"]],width=60),collapse="\n"))
-  md.str %+=% sprintf("- Rule          :")
-  md.str %+=% sprintf("    - language  : %s",x[["rule.language"]])
-  md.str %+=% sprintf("    - severity  : %s",x[["rule.severity"]])
-  md.str %+=% sprintf("    - change    : %s",x[["rule.change"]])
-  md.str %+=% sprintf("- Rule description:\n\n```\n%s\n```"
-            , gsub("`","",paste("  ", strwrap(x[["rule.description"]],width=60),collapse="\n")))
-  md.str %+=% sprintf("- Rule expression:\n\n```\n%s\n```\n\n"
-   , gsub("\\n","\n  ", paste("  ",x[["rule.expression"]])))
-  md.str %+=% paste(rep("-",80),collapse="")
-  md.str
-}
-
-
-
-#' Create a human-readable summary
-#' 
-#' @param x an object to be downmarked
-#' @param ... Currently unused.
-#' @export
-md_summary <- function(x,...){
-  UseMethod("md_summary")
-}
-
-
-
-#' @rdname as_markdown
-#' @param author \code{[character]} author
-md_summary.vrs <- function(x, author=Sys.info()["user"], ...){
-  md.str <- "# Validation report summary"
-  md.str %+=% sprintf("Generated by %s, %s",author,date())
-  
-  md.str %+=% "\n## Overview of validation procedure\n"
-  
-  
-  md.str %+=% "\nEvaluations:\n"
-  basic_info <- 
-    data.frame(
-      Information = c("Nr of validations", "Nr of rules checked")
-      , Value = c(nrow(x), length(unique(x$rule.expression)))
-    )
-  md.str %+=% paste(knitr::kable(basic_info, format="markdown"), collapse="\n")
-
-  md.str %+=% "\nEvents by actor:\n"
-  tab <- as.data.frame(table(x$event.actor))
-  names(tab) <- c("actor","events")
-  md.str %+=% paste(knitr::kable(tab),collapse="\n")
-    
-  md.str %+=% "\nSeverity changes:\n"
-  tab <- table(severity = x$rule.severity, change = x$rule.change)
-  md.str %+=% paste(knitr::kable(tab,format="markdown"),collapse="\n")
-  
-  
-  
-  md.str %+=% "\n## Overview of validation results\n"
-  
-  md.str %+=% "\nResults by severity (possibly after change):\n"
-  tab <- stats::addmargins(table(severity = x$rule.severity, result = x$value))
-  md.str %+=% paste(knitr::kable(tab,format="markdown", caption="Results by severity"), collapse="\n")
-
-  md.str %+=% "\n## Results by rule:\n"
-  i <- 0
-  for ( rl in unique(x$rule.expression)){
-    i = i + 1
-    y <- x[x$rule.expression == rl,]
-    md.str %+=% "------------------------------------------------------------\n"
-    md.str %+=% sprintf("\n**Rule %03d: Description:**\n",i)
-    md.str %+=% y$rule.description[1]
-    md.str %+=% "\n**Expression:**\n"
-    md.str %+=% "\n```"
-    md.str %+=% rl
-    md.str %+=% "```\n"
-    md.str %+=% "\n\n**Results:**\n\n"
-    tab <- as.data.frame(t(as.matrix(stats::addmargins(table(value = y$value)))))
-    md.str %+=% paste(knitr::kable(tab, format="markdown"),collapse="\n")
-  }
-  
-    
-  md.str
-  
-}
-
-
-
-
-
-
-
-
-
-
-

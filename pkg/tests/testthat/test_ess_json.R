@@ -9,10 +9,15 @@ test_that("translation to json follows ESS JSON scheme",{
     , mean(turnover,na.rm=TRUE) >= 0 
   )
   cf <- confront(retailers,v, key="primkey")
-  dat <- ess_data_frame(cf,v)
-  json <- ess_validation_report(dat)
+  
+  json <- ess_validation_report(cf, v, population = "foo",measurement = "bar")
   if (require(jsonvalidate)){
-    expect_true(json_validate(json, ess_json_schema()))
+    expect_true(is_ess_report(json))
   }
-  expect_warning(ess_json_schema(version = "foo"))
+  
+  fl <- tempfile()
+  export_ess_validation_report(cf, v, file=fl)
+  dat <- read_ess_validation_report(file=fl)
+  expect_true(is.data.frame(dat))
+  expect_equal(nrow(dat),nrow(retailers) * (length(v)-1) + 1)
 })
