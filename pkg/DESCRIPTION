@@ -14,5 +14,5 @@ Depends: R (>= 3.1.3), validate (>= 0.2.0)
 Imports: jsonlite, jsonvalidate, knitr, rmarkdown, stats
 URL: https://github.com/data-cleaning/validatereport
 BugReports: https://github.com/data-cleaning/validatereport/issues
-Suggests: testthat
+Suggests: RUnit
 RoxygenNote: 6.1.1

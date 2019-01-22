@@ -3,6 +3,7 @@
 S3method(as_markdown,vrs)
 export(as_markdown)
 export(ess_json_schema)
+export(ess_validation_report)
 export(export_ess_validation_report)
 export(is_ess_report)
 export(md_summary)

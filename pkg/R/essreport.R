@@ -23,7 +23,11 @@
 #' M. van der Loo, O. ten Bosch (2017). Design of a generic machine-readable
 #' validation report structure, version 1.0. \href{../doc/validation_report_structure.pdf}{PDF}.
 #'
-#'
+#' @examples
+#' 
+#' x <- 10
+#'  
+#' @export
 ess_validation_report <- function(validation, rules
                                 , population = "", measurement="" ){
   if ( is.null(validation$._key)){
