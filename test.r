@@ -38,7 +38,7 @@ dump <- capture.output(
 
 
 # execute tests
-cat("# Starting tests")
+cat("# Starting tests\n")
 require(pkgname, lib.loc=install_dir, quietly=TRUE, character.only=TRUE)
 for (tf in dir("pkg/tests",pattern="\\.r|R$",full.names=TRUE)){
   cat(sprintf("### Running %s\n",basename(tf)))

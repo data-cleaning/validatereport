@@ -27,7 +27,6 @@ if (require(RUnit, quietly=TRUE)){
   checkTrue(is.data.frame(dat), msg = "ESS-TYPE")
   checkEquals(nrow(dat),nrow(retailers) * (length(v)-1) + 1, msg="ESS-SIZE")
 
-
 } else {
   message("RUnit not available. Skipping tests")
 }

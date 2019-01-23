@@ -16,6 +16,30 @@
 #'
 #' @return \code{[character]} A JSON string.
 #'
+#' 
+#' @section Details:
+#' Every time a data set or records is validated against a rule, a \code{TRUE}, 
+#' \code{FALSE} or \code{NA} results. An ESS validation report stores all 
+#' information necessary to identify each individual validation results. 
+#' This is done by storing the following metadata with the values:
+#' 
+#' \itemize{
+#' \item{The validation \emph{event} is identified by a time stamp, and the agent 
+#' (software, platform, server, person) performing the validation. Optionally
+#' information about the event that triggered the validation and the actor (user)
+#' responsible for the validation can be added.}
+#' \item{The source \emph{data} used to compute the result. Computing a validation
+#' result may involve many individual data points. Each point can in 
+#' principle be defined by the Population, the moment of measurement, the populaiton
+#' unit and the variable measured. The source data may or may not coincide 
+#' with the data targeted for validation (e.g. comparing x with mean(x) involves
+#' a column of data but the validation target is a single value). Target data
+#' is identified in the same way as source data}
+#' \item{The validating \emph{expression} defining the border between
+#' validity and non-validity.}
+#' }
+#'
+#'
 #' @family ess_report
 #'
 #' @references 
@@ -25,7 +49,21 @@
 #'
 #' @examples
 #' 
-#' x <- 10
+#' library(validate)
+#' data(retailers)
+#' # add primary key to the retailers dataset
+#' retailers$ID <- sprintf("REC%02d",seq_len(nrow(retailers)))
+#' rules <- validator(
+#'     total.rev >= 0 
+#'   , staff >= 0
+#'   , total.costs >= 0
+#'   , profit + total.costs == total.rev
+#'   , mean(profit) >= 10
+#' )
+#' # check the rules (we leave no room for machine rounding in this example)
+#' result <- confront(retailers, rules, key="ID", lin.ineq.eps=0, lin.eq.eps=0)
+#' json <- ess_validation_report(result, rules, population="supermarkets"
+#'        , measurement="SBS2000")
 #'  
 #' @export
 ess_validation_report <- function(validation, rules
