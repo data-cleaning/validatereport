@@ -45,6 +45,7 @@ for (tf in dir("pkg/tests",pattern="\\.r|R$",full.names=TRUE)){
   RUnit::runTestFile(tf)
 }
 
+
 cat(sprintf("# Done (%s)\n",format(Sys.time()-t0)))
 
 

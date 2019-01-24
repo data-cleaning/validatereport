@@ -3,25 +3,45 @@
 
 #' Read ESS validation report structure (beta)
 #'
-#' @param file \code{[character]} file An URL or file location
-#' @param check \code{[check]} logical Toggle checking against json schema.
-#' @param version \code{[character]]} version of ESS reporting scheme.
-#' 
+#' @param file \code{[character]} A file location
+#' @param check \code{[logical]}  Toggle checking against json schema.
+#' @param version \code{[character]]} Version of ESS reporting scheme to check against.
+#' @param json \code{[character]} Optinal. An ESS json string, for example
+#'   created by \code{\link{ess_validation_report}}.
+#'
 #' @details 
 #' 
 #' If \code{check=TRUE}, the input file is tested against the json schema
 #' using package \pkg{jsonvalidate}.
-#' 
+#'
+#' At the moment, only JSON version 1.0.1 can be parsed.
+#'
+#' @examples
+#'
+#' library(validate)
+#' data(retailers)
+#' retailers$id <- sprintf("REC%02d", seq_len(nrow(retailers)))
+#' rules <- validator(turnover >= 0, mean(profit,na.rm=TRUE)>= 0)
+#' out <- confront(retailers, rules, key="id")
+#' json_report <- ess_validation_report(out, rules
+#'    , population="retailers", measurement="SBS2000")
+#' df <- read_ess_validation_report(json=json_report)
+#'
 #' @family ess_report
 #'
 #' @return A \code{data.frame}.
 #'  
 #' @export
-read_ess_validation_report <- function(file, check=TRUE, version=c("1.0.1","1.0.0")){
+read_ess_validation_report <- function(file, check=TRUE
+      , version=c("1.0.1","1.0.0"), json=NULL){
   
   # Input checks
   version <- match.arg(version)
-  txt <- paste0(readLines(file, encoding = "UTF-8"),collapse="\n")
+  txt <- if (!is.null(json)){
+    json
+  } else {
+    paste0(readLines(file, encoding = "UTF-8"),collapse="\n")
+  }
    
   if ( !validUTF8(txt) ){
     message("The submitted text is not valid UTF-8. Continuing, but results could be b0rked.")

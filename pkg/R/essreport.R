@@ -18,34 +18,50 @@
 #'
 #' 
 #' @section Details:
-#' Every time a data set or records is validated against a rule, a \code{TRUE}, 
-#' \code{FALSE} or \code{NA} results. An ESS validation report stores all 
-#' information necessary to identify each individual validation results. 
-#' This is done by storing the following metadata with the values:
 #' 
-#' \itemize{
-#' \item{The validation \emph{event} is identified by a time stamp, and the agent 
-#' (software, platform, server, person) performing the validation. Optionally
-#' information about the event that triggered the validation and the actor (user)
-#' responsible for the validation can be added.}
-#' \item{The source \emph{data} used to compute the result. Computing a validation
-#' result may involve many individual data points. Each point can in 
-#' principle be defined by the Population, the moment of measurement, the populaiton
-#' unit and the variable measured. The source data may or may not coincide 
-#' with the data targeted for validation (e.g. comparing x with mean(x) involves
-#' a column of data but the validation target is a single value). Target data
-#' is identified in the same way as source data}
-#' \item{The validating \emph{expression} defining the border between
-#' validity and non-validity.}
-#' }
+#' The idea of an ESS validation report is that every validation should
+#' be reported with sufficient metadata to fully understand it. The following
+#' figure demonstrates the information model behind the ESS report structure.
+#' Solid lines indicate aggregation (validation is composed of data, rule, event,
+#' value). Dashed arrows indicate the flow of information over time.
+#' 
+#' \if{html}{\figure{reportuml.png}{options: width=80\% alt="cellwise splitting"}}
+#' \if{latex}{\figure{reportuml.png}{options: width=14cm}}
+#' 
+#' A validation result is generated in a validation event, where a validating expression
+#' (rule) is evaluated in the context of one or more data points. The data used for 
+#' this evaluation is called the \emph{source} data. The data under scrutiny is 
+#' called the \emph{target} data. These usually coincide, but there are cases
+#' where the data under scrutiny is a subset of the data needed to evaluate the rule.
+#' For example when a data point is compared with the mean of a reference set of
+#' data points.
 #'
+#' An ESS validation report is a sequence of \code{validation} instances, which
+#' we encode here in JSON format according to the \code{\link{ess_json_schema}}
+#' that defines the technical implementation of the above information model.
+#'
+#' Rule metadata is extracted from the \code{validator} object. Information
+#' on the event, data and resulting value is extracted from the \code{validation}
+#' object. An ESS validation report becomes application-independent when all (source and 
+#' target) data points are identified semantically rather than with an abstract key. 
+#' The following  elements establish such an identification for a single data point:
+#'
+#' \itemize{
+#' \item{The \emph{population} of objects to which the data pertains.}
+#' \item{The identity of the \emph{measurement} in which the data values were observed (e.g. a survey)}
+#' \item{The identity of the \emph{population unit} to which the value pertains.}
+#' \item{The \emph{variable} (attribute) that was measured.}
+#' }
 #'
 #' @family ess_report
 #'
 #' @references 
 #' 
-#' M. van der Loo, O. ten Bosch (2017). Design of a generic machine-readable
-#' validation report structure, version 1.0. \href{../doc/validation_report_structure.pdf}{PDF}.
+#' M. van der Loo, O. ten Bosch (2017). \emph{Design of a generic machine-readable
+#' validation report structure, version 1.0}. \href{../doc/validation_report_structure.pdf}{PDF}.
+#' 
+#' MPJ van der Loo, E. de Jonge (2018). \emph{Statistical Data Cleaning with Applications in R}.
+#' John Wiley & Sons (NY).
 #'
 #' @examples
 #' 
@@ -68,7 +84,7 @@
 #' @export
 ess_validation_report <- function(validation, rules
                                 , population = "", measurement="" ){
-  if ( is.null(validation$._key)){
+  if ( is.null(validation$._key) ){
     stop("No primary key label found in validation object. 
           Use validate::confront(...,key=)) to set a key.")
   }

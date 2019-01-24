@@ -30,7 +30,7 @@ $R -e "roxygen2::roxygenize('pkg')"
 echo "######## Building package in output..."
 mkdir output
 cd output
-$R CMD build ../pkg
+$R CMD build --compact-vignettes=qpdf ../pkg
 echo "######## Testing package with $CHECKARG ..."
 for x in *.tar.gz 
 do 
