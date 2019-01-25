@@ -19,12 +19,11 @@
 #' @examples
 #'
 #' library(validate)
-#' data(retailers)
-#' retailers$id <- sprintf("REC%02d", seq_len(nrow(retailers)))
+#' data(SBS2000)
 #' rules <- validator(turnover >= 0, mean(profit,na.rm=TRUE)>= 0)
-#' out <- confront(retailers, rules, key="id")
+#' out <- confront(SBS2000, rules, key="id")
 #' json_report <- ess_validation_report(out, rules
-#'    , population="retailers", measurement="SBS2000")
+#'    , population="supermarkets")
 #' df <- read_ess_validation_report(json=json_report)
 #'
 #' @family ess_report

@@ -55,6 +55,7 @@
 #' \item{The identity of the \emph{population unit} to which the value pertains.}
 #' \item{The \emph{variable} (attribute) that was measured.}
 #' }
+#' There are possibly many data points involved in a single validation.
 #'
 #' @family ess_report
 #'
