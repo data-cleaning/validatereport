@@ -11,8 +11,9 @@
 #' @param rules Object of class \code{\link[validate]{validator}}
 #' @param population \code{[character]} Unique descriptor for the population 
 #'     from where the data originated.
-#' @param measurement \code{[character]} Unique descriptor for the event at 
-#'     which the data was collected.
+#' @param measurement \code{[Optional|character]} Unique identifier related to the 
+#'  origin of the dataset under scrutiny. By default, the name of the variable
+#'  holding the data during validation is used.
 #'
 #' @return \code{[character]} A JSON string.
 #'
@@ -48,7 +49,9 @@
 #'
 #' \itemize{
 #' \item{The \emph{population} of objects to which the data pertains.}
-#' \item{The identity of the \emph{measurement} in which the data values were observed (e.g. a survey)}
+#' \item{The identity of the \emph{measurement} in which the data values were observed 
+#' (e.g. a survey). By default the name of the data set under validation is 
+#' extracted from the validation object.}
 #' \item{The identity of the \emph{population unit} to which the value pertains.}
 #' \item{The \emph{variable} (attribute) that was measured.}
 #' }
@@ -66,9 +69,9 @@
 #' @examples
 #' 
 #' library(validate)
-#' data(retailers)
-#' # add primary key to the retailers dataset
-#' retailers$ID <- sprintf("REC%02d",seq_len(nrow(retailers)))
+#' data(SBS2000)
+#' 
+#' 
 #' rules <- validator(
 #'     total.rev >= 0 
 #'   , staff >= 0
@@ -77,13 +80,13 @@
 #'   , mean(profit) >= 10
 #' )
 #' # check the rules (we leave no room for machine rounding in this example)
-#' result <- confront(retailers, rules, key="ID", lin.ineq.eps=0, lin.eq.eps=0)
-#' json <- ess_validation_report(result, rules, population="supermarkets"
-#'        , measurement="SBS2000")
+#' # To create an ESS report, it is essential to have an identifying key variable.
+#' result <- confront(SBS2000, rules, key="id", lin.ineq.eps=0, lin.eq.eps=0)
+#' json <- ess_validation_report(result, rules)
 #'  
 #' @export
 ess_validation_report <- function(validation, rules
-                                , population = "", measurement="" ){
+                    , population = "", measurement=NULL ){
   if ( is.null(validation$._key) ){
     stop("No primary key label found in validation object. 
           Use validate::confront(...,key=)) to set a key.")
@@ -101,7 +104,7 @@ ess_validation_report <- function(validation, rules
   dat <- unwrap(dat)
   
   # replace empty keys with "" (meaning: all data items)
-  # TODO: formal getter for key.
+  
   keys <- dat[[validation$._key]]
   dat[[validation$._key]] <- ifelse(is.na(keys), "", keys)
   
@@ -111,6 +114,9 @@ ess_validation_report <- function(validation, rules
   # create data identifying key lists (requires unique rule names)
   rulevars <- variables(rules, as="list")[dat$name]
   
+  if (is.null(measurement)){
+    measurement <- deparse(validation$._call[[2]])
+  }
   dat$target <- sapply(seq_along(rulevars), function(i){
     x <- paste0("["
               ,       enquote(population)    # U
