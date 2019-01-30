@@ -57,6 +57,19 @@
 #' }
 #' There are possibly many data points involved in a single validation.
 #'
+#' @section Extensions with respect to the ESS JSON report scheme.
+#' 
+#' The ESS JSON scheme allows for extra information to be stored. Here, we
+#' add a field called \code{source} under the \code{rule} substructure. 
+#' This contrasts with the \code{expression} field in the following way:
+#' the \code{expression} is the literal R expression that was evaluated 
+#' using the data set under scrutiny. The \code{source} field is a more readable
+#' version of the rule. In particular, it is not vectorized and not adapted
+#' to account for machine accuracy. Assignments (\code{:=}) and variable
+#' groups (\code{var_group}) are expanded.
+#' 
+#'
+#'
 #' @family ess_report
 #'
 #' @references 
@@ -99,13 +112,20 @@ ess_validation_report <- function(validation, rules
                  , paste(dupnames, collapse=", ")))
   }
   
-  # combine rules with validation output
-  dat <- merge( validate::as.data.frame(rules)
-              , validate::as.data.frame(validation) )
+  # Combine rules with validation output.
+  # Assignments and variable groups are expanded, but not
+  # machine rounding for readability
+  rls <- validate::as.data.frame(rules
+                    , expand_assignments=TRUE
+                    , expand_groups=TRUE
+                    , vectorize=FALSE
+                    , lin_eq_eps=0
+                    , lin_ineq_eps=0)
+    
+  dat <- merge( validate::as.data.frame(validation), rls, all.x = TRUE)
   dat <- unwrap(dat)
   
-  # replace empty keys with "" (meaning: all data items)
-  
+  # TODO replace empty keys with "" (meaning: all data items)
   keys <- dat[[validation$._key]]
   dat[[validation$._key]] <- ifelse(is.na(keys), "", keys)
   
@@ -115,6 +135,8 @@ ess_validation_report <- function(validation, rules
   # create data identifying key lists (requires unique rule names)
   rulevars <- variables(rules, as="list")[dat$name]
   
+
+  # get measurement (t in UtuX coding) if not defined
   if (is.null(measurement)){
     measurement <- deparse(validation$._call[[2]])
   }
@@ -145,6 +167,7 @@ ess_validation_report <- function(validation, rules
       , dat$expression
       , dat$severity
       , dat$description
+      , dat$rule  # quasisource
       # data
       , dat$source
       , dat$target
@@ -198,7 +221,8 @@ validation_template <- function(x){
     "language":    "%s",
     "expression":  "%s",
     "severity":    "%s",
-    "description": "%s"
+    "description": "%s",
+    "source":      "%s"
   },
   "data": {
     "source":      %s,
