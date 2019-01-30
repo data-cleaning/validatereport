@@ -4,10 +4,9 @@ suppressPackageStartupMessages({
   if (!require("docopt")) stop("docopt not installed")
 })
 
-"Usage: test.r [nocovr] [snitch]
+"Usage: test.r [nocovr] 
 
 nocovr Skip measuring test coverage.
-snitch Report lines not covered.
 " -> doc
 
 opt <- docopt(doc)
@@ -48,5 +47,7 @@ for (tf in dir("pkg/tests",pattern="\\.r|R$",full.names=TRUE)){
 
 cat(sprintf("# Done (%s)\n",format(Sys.time()-t0)))
 
-
+if (!opt$nocovr){
+  covr::package_coverage("pkg")
+}
 
