@@ -7,6 +7,40 @@
 - Read validation results from ESS JSON reporting standard.
 - Create attractive validation reports based on results from the [validate](https://cran.r-project.org/web/packages/validate/) package (EXPERIMENTAL)
 
+# Install the alpha version
+
+0. On Windows, make sure that you have the correct version of [rtools](https://cran.r-project.org/bin/windows/Rtools/) installed.
+1. Install the [drat](https://cran.r-project.org/package=drat) package.
+2. From the R command-line do
+
+```r
+drat::addRepo("markvanderloo")
+install.packages("validatereport", type="source")
+```
+
+# Exporting to ESS validation report format
+
+```r
+library(validatereport)
+data(SBS2000)
+
+rules <- validator(turnover >= 0
+    , mean(turnover, na.rm=TRUE) >= 1
+    , turnover + other.rev == total.rev)
+
+result <- confront(SBS2000, rules, key="id")
+
+json <- ess_validation_report(result, rules)
+
+cat(json)
+
+# or, export to file
+export_ess_validation_report(result, rules, file="report.json")
+
+
+```
+
+
 
 
 

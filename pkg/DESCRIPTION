@@ -10,7 +10,7 @@ Authors@R: c(person("Mark", "van der Loo",role=c("cre","aut")
 Description: Export validation results created by the 'validate' package
     to the European Statistical System 'JSON' validation report standard.
 Version: 0.0.4
-Depends: R (>= 3.1.3), validate (>= 0.2.0)
+Depends: R (>= 3.1.3), validate (>= 0.2.7)
 Imports: jsonlite, jsonvalidate, knitr, rmarkdown, stats
 URL: https://github.com/data-cleaning/validatereport
 BugReports: https://github.com/data-cleaning/validatereport/issues
