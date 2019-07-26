@@ -22,8 +22,7 @@
 #' data(SBS2000)
 #' rules <- validator(turnover >= 0, mean(profit,na.rm=TRUE)>= 0)
 #' out <- confront(SBS2000, rules, key="id")
-#' json_report <- ess_validation_report(out, rules
-#'    , population="supermarkets")
+#' json_report <- ess_validation_report(out, rules)
 #' df <- read_ess_validation_report(json=json_report)
 #'
 #' @family ess_report
