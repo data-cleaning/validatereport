@@ -1,7 +1,7 @@
 #' @import validate
 {}
 
-#' Create JSON validation report
+#' Create an ESS JSON validation report
 #' 
 #' Creates a machine-readable validation report according to the ESS 
 #' \href{../doc/validation_report_structure.pdf}{validation report structure}.
@@ -11,9 +11,6 @@
 #' @param rules Object of class \code{\link[validate]{validator}}
 #' @param population \code{[character]} Unique descriptor for the population 
 #'     from where the data originated.
-#' @param measurement \code{[Optional|character]} Unique identifier related to the 
-#'  origin of the dataset under scrutiny. By default, the name of the variable
-#'  holding the data during validation is used.
 #'
 #' @return \code{[character]} A JSON string.
 #'
@@ -101,9 +98,10 @@
 #' @export
 ess_validation_report <- function(validation, rules
                     , population = "", measurement=NULL ){
-  if ( is.null(validation$._key) ){
-    stop("No primary key label found in validation object. 
-          Use validate::confront(...,key=)) to set a key.")
+  ## TODO: if no identifying keys found, derive part of UtuX
+  if ( ncol(keyset(validation)) == 0 ){
+    stop("No identifying keys found in validation object. 
+          Use validate::confront(...,key=)) to set key(s).")
   }
   
   if ( anyDuplicated(names(rules)) ){
@@ -124,35 +122,24 @@ ess_validation_report <- function(validation, rules
     
   dat <- merge( validate::as.data.frame(validation), rls, all.x = TRUE)
   dat <- unwrap(dat)
-  
-  # TODO replace empty keys with "" (meaning: all data items)
-  keys <- dat[[validation$._key]]
-  dat[[validation$._key]] <- ifelse(is.na(keys), "", keys)
-  
-  # key for validation result. Important only for aggregates
-  dat$validation_id <- sprintf("%05d",seq_len(nrow(dat)))
-  
-  # create data identifying key lists (requires unique rule names)
-  rulevars <- variables(rules, as="list")[dat$name]
-  
-
-  # get measurement (t in UtuX coding) if not defined
-  if (is.null(measurement)){
-    measurement <- deparse(validation$._call[[2]])
+  dat$validation_id <- sprintf("%s-%08d",format(Sys.time(),"%Y%m%dT%H:%M:%S"),seq_len(nrow(dat)))
+  keynames <- names(keyset(validation))
+  keys <- dat[keynames]
+  for ( i in seq_along(keys)){
+    keys[[i]] <- paste('"',as.character(keys[[i]]),'"',sep="")
   }
-  dat$target <- sapply(seq_along(rulevars), function(i){
-    x <- paste0("["
-              ,       enquote(population)    # U
-              , ", ", enquote(measurement)   # t
-              , ", ", enquote(keys[i])     # u
-              , ", ", enquote(rulevars[[i]])        # X
-              , "]")   
-    paste("[ ",paste(x,collapse=", ")," ]")
-  })
-  
-  # TODO: allow for differences between source and target
-  dat$source <- dat$target
-  
+    keys[keys== '"NA"'] <- ""
+  dat[keynames] <- keys  
+  # put subkeys in a json array
+  src <- paste("[ ",do.call(paste, args = c(keys, sep=", "))," ]")
+  # replace empty arrays [ , , ... , ] with [ ]
+  src <- sub("^\\[[ ,]+\\]$","[]",src) 
+  # put in an array again because there can be multiple keys in the array in principle.
+  src <- paste("[", src, "]")
+  #   
+  dat$source <- src
+  dat$target <- src
+
   event <- event(validation)
   
   json <- sprintf(validation_template()
@@ -175,15 +162,12 @@ ess_validation_report <- function(validation, rules
       # value
       , sprintf("%s", as.integer(dat$value))
   )
-  paste0("[", paste(json, collapse=","),"]")
+ paste0("[", paste(json, collapse=","),"]")
 }
 
-enquote <- function(x){
-  str <- strsplit(x,",")
-  sapply(str,function(x){
-    paste0('"',trimws(x),'"',collapse=", ")
-  })
-}
+
+
+
 
 #' Write to validation report structure
 #'
@@ -205,6 +189,9 @@ export_ess_validation_report <- function(validation, rules, file, ...){
   write(enc2utf8(report), file=file)
   invisible(report)
 }
+
+
+
 
 # Template to fill validation report v1.0
 validation_template <- function(x){
@@ -251,6 +238,13 @@ unwrap <- function(d){
   }
   d
 }
+
+
+
+
+
+
+
 
 
 #' Receive ESS json schema definition string.
