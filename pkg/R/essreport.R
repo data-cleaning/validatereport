@@ -320,7 +320,7 @@ microdata_validation_report <- function(validation, rules, U=NULL, t=NULL){
       , gsub('"','\\\\"',dat$rule)  # quasisource
       # data
       , UtuX
-      , rep('')
+      , UtuX # todo: derive better target values
       , dat$description
       # value
       , sprintf("%s", as.integer(dat$value))
