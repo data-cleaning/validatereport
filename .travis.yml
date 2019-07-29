@@ -15,7 +15,7 @@ r:
  - release
 
 before_install:
-  - R -e "install.packages(c('testthat','roxygen2','pkgload','jsonlite', 'jsonvalidate', 'knitr', 'rmarkdown','validate'))"
+  - R -e "install.packages(c('tinytest','roxygen2','pkgload','jsonlite', 'jsonvalidate', 'validate'))"
   - R -e "pkgload::load_all('./pkg'); roxygen2::roxygenize('./pkg')"
   - cd ./pkg
 
