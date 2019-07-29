@@ -5,6 +5,9 @@
 # Session Data files
 .RData
 
+# Output created by roxygen2
+*.Rd
+
 # Example code in package build process
 *-Ex.R
 
