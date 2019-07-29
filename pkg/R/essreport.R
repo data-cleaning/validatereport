@@ -3,8 +3,13 @@
 
 #' Create an ESS JSON validation report
 #' 
-#' Creates a machine-readable validation report according to the ESS 
+#' Creates a machine-readable validation report according to the ESS
 #' \href{../doc/validation_report_structure.pdf}{validation report structure}.
+#' This function is geared for use with data in long format, as it is
+#' transferred between National Statistical Institutes and Eurostat.  Use
+#' \code{\link{microdata_validation_report}} to create an ESS validation report
+#' for data that is represented record-wise (i.e. with multiple variables per
+#' record).
 #' 
 #' 
 #' @param validation Object of class \code{\link[validate]{validation}}
@@ -15,32 +20,33 @@
 #' 
 #' @section Details:
 #' 
-#' The idea of an ESS validation report is that every validation should
-#' be reported with sufficient metadata to fully understand it. The following
+#' The idea of an ESS validation report is that every validation should be
+#' reported with sufficient metadata to fully understand it. The following
 #' figure demonstrates the information model behind the ESS report structure.
-#' Solid lines indicate aggregation (validation is composed of data, rule, event,
-#' value). Dashed arrows indicate the flow of information over time.
+#' Solid lines indicate aggregation (validation is composed of data, rule,
+#' event, value). Dashed arrows indicate the flow of information over time.
 #' 
 #' \if{html}{\figure{reportuml.png}{options: width=80\% alt="cellwise splitting"}}
 #' \if{latex}{\figure{reportuml.png}{options: width=14cm}}
 #' 
-#' A validation result is generated in a validation event, where a validating expression
-#' (rule) is evaluated in the context of one or more data points. The data used for 
-#' this evaluation is called the \emph{source} data. The data under scrutiny is 
-#' called the \emph{target} data. These usually coincide, but there are cases
-#' where the data under scrutiny is a subset of the data needed to evaluate the rule.
-#' For example when a data point is compared with the mean of a reference set of
-#' data points.
+#' A validation result is generated in a validation event, where a validating
+#' expression (rule) is evaluated in the context of one or more data points.
+#' The data used for this evaluation is called the \emph{source} data. The data
+#' under scrutiny is called the \emph{target} data. These usually coincide, but
+#' there are cases where the data under scrutiny is a subset of the data needed
+#' to evaluate the rule.  For example when a data point is compared with the
+#' mean of a reference set of data points.
 #'
 #' An ESS validation report is a sequence of \code{validation} instances, which
 #' we encode here in JSON format according to the \code{\link{ess_json_schema}}
 #' that defines the technical implementation of the above information model.
 #'
-#' Rule metadata is extracted from the \code{validator} object. Information
-#' on the event, data and resulting value is extracted from the \code{validation}
-#' object. An ESS validation report becomes application-independent when all (source and 
-#' target) data points are identified semantically rather than with an abstract key. 
-#' The following  elements establish such an identification for a single data point:
+#' Rule metadata is extracted from the \code{validator} object. Information on
+#' the event, data and resulting value is extracted from the \code{validation}
+#' object. An ESS validation report becomes application-independent when all
+#' (source and target) data points are identified semantically rather than with
+#' an abstract key.  The following  elements establish such an identification
+#' for a single data point:
 #'
 #' \itemize{
 #' \item{The \emph{population} of objects to which the data pertains.}
@@ -54,14 +60,14 @@
 #'
 #' @section Extensions with respect to the ESS JSON report scheme:
 #' 
-#' The ESS JSON scheme allows for extra information to be stored. Here, we
-#' add a field called \code{source} under the \code{rule} substructure. 
-#' This contrasts with the \code{expression} field in the following way:
-#' the \code{expression} is the literal R expression that was evaluated 
-#' using the data set under scrutiny. The \code{source} field is a more readable
-#' version of the rule. In particular, it is not vectorized and not adapted
-#' to account for machine accuracy. Assignments (\code{:=}) and variable
-#' groups (\code{var_group}) are expanded.
+#' The ESS JSON scheme allows for extra information to be stored. Here, we add
+#' a field called \code{source} under the \code{rule} substructure.  This
+#' contrasts with the \code{expression} field in the following way: the
+#' \code{expression} is the literal R expression that was evaluated using the
+#' data set under scrutiny. The \code{source} field is a more readable version
+#' of the rule. In particular, it is not vectorized and not adapted to account
+#' for machine accuracy. Assignments (\code{:=}) and variable groups
+#' (\code{var_group}) are expanded.
 #' 
 #'
 #'
@@ -69,29 +75,40 @@
 #'
 #' @references 
 #' 
-#' M. van der Loo, O. ten Bosch (2017). \emph{Design of a generic machine-readable
-#' validation report structure, version 1.0}. \href{../doc/validation_report_structure.pdf}{PDF}.
+#' M. van der Loo, O. ten Bosch (2017). \emph{Design of a generic
+#' machine-readable validation report structure, version 1.0}.
+#' \href{../doc/validation_report_structure.pdf}{PDF}.
 #' 
-#' MPJ van der Loo, E. de Jonge (2018). \emph{Statistical Data Cleaning with Applications in R}.
-#' John Wiley & Sons (NY).
+#' MPJ van der Loo, E. de Jonge (2018). \emph{Statistical Data Cleaning with
+#' Applications in R}.  John Wiley & Sons (NY).
 #'
 #' @examples
 #' 
-#' library(validate)
-#' data(SBS2000)
 #' 
-#' 
-#' rules <- validator(
-#'     total.rev >= 0 
-#'   , staff >= 0
-#'   , total.costs >= 0
-#'   , profit + total.costs == total.rev
-#'   , mean(profit) >= 10
-#' )
-#' # check the rules (we leave no room for machine rounding in this example)
-#' # To create an ESS report, it is essential to have an identifying key variable.
-#' result <- confront(SBS2000, rules, key="id", lin.ineq.eps=0, lin.eq.eps=0)
-#' json <- ess_validation_report(result, rules)
+#'
+#'library(validate)
+#'library(validatereport)
+#'data(STS)
+#'
+#'# two rules from the STS Data Structure Definition
+#'rules <- validator(
+#'  STS02 = OBS_VALUE >= 0
+#' ,STS04 =  if (INDICATOR %in% c("IMPZ","PRBB","PREN","PREX","PREZ","PRIN","PRON")) OBS_VALUE > 0
+#')
+#'description(rules) <- c(
+#'  "Observed values must be nonnegative"
+#' ,"Price indices must be positive"
+#')
+#'
+#'
+#'cf <- confront(STS$data, rules
+#'  , key = names(STS$data)[1:7])
+#'
+#'json <- ess_validation_report(cf, rules)
+#'# show first 1405 characters of json report
+#'cat(substr(json,1, 1405),"\n")
+#'
+#'
 #'  
 #' @export
 ess_validation_report <- function(validation, rules){
@@ -159,12 +176,18 @@ ess_validation_report <- function(validation, rules){
       # value
       , sprintf("%s", as.integer(dat$value))
   )
- paste0("[", paste(json, collapse=","),"]")
+ # standard required UTF-8.
+ enc2utf8(paste0("[", paste(json, collapse=","),"]"))
 }
 
 #' Create ESS validation report from microdata validation
 #'
-#' Validation results to ESS JSON. Geared towards use with validation of microdata.
+#' Creates a machine-readable validation report according to the ESS
+#' \href{../doc/validation_report_structure.pdf}{validation report structure}.
+#' This function is geared for use with microdata in wide format (multiple
+#' variables per record). Use \code{\link{ess_validation_report}} to create an
+#' ESS validation report for data that is represented in long format.
+#' 
 #'
 #' @inheritParams ess_validation_report
 #' @param U \code{[character]} scalar. The name of the column in the keyset that specifies the
@@ -178,27 +201,52 @@ ess_validation_report <- function(validation, rules){
 #'
 #' @section Details:
 #'
-#' Each validation result is identified with a set of possibly multiple keys, each of which consist of
-#' four parts \code{U}, \code{t}, \code{u}, \code{X} (pronounce: \eqn{U\tau uX}).
+#' Each validation result is identified with a set of possibly multiple keys,
+#' each of which consist of four parts \code{U}, \code{t}, \code{u}, \code{X}
+#' (pronounce: \eqn{U\tau uX}).
 #' \itemize{
-#'  \item{\code{U}: Labels the population described by the data (e.g. \code{"households"}).}
-#'  \item{\code{t}: Labels the measurement event, such as a survey number (e.g. \code{"HBS2009"}, for household budget survey.}
-#'  \item{\code{u}: Labels the popolation element of interest. (e.g. \code{"hh12345"})}
+#'  \item{\code{U}: Labels the population described by the data (e.g.
+#'    \code{"households"}).}
+#'  \item{\code{t}: Labels the measurement event, such as a survey number (e.g.
+#'    \code{"HBS2009"}, for household budget survey.}
+#'  \item{\code{u}: Labels the popolation element of interest. (e.g.
+#'    \code{"hh12345"})}
 #'  \item{\code{X}: Labels the variable of interest, (e.g. \code{"income"})}
 #' }
-#' In \code{JSON} one such a key is stored as \code{["households", "HBS2009","hh12345","income"]}. There may be 
-#' multiple of such quads associated with a single result as a single validation result may concern multiple
-#' units, measurements, variables, and/or populations. 
+#' In \code{JSON} one such a key is stored as \code{["households",
+#' "HBS2009","hh12345","income"]}. There may be multiple of such quads
+#' associated with a single result as a single validation result may concern
+#' multiple units, measurements, variables, and/or populations. 
 #'
 #'
-#' The value of \code{u} is derived from the keyset that comes with the validation results: it is the 
-#' not specified with \code{U} and \code{u}. If there are multiple candidate columns for \code{u}, they
-#' will be added comma-separated to the key set. In that case a single key may have more than four
-#' subkeys, and these will be stored as \code{[U, t, u1, u2,...,un, X]}. Cases where 
-#' \code{u} is empty are treated as relating to all units (e.g. for a rule like \code{mean(x) < 3}).
-#' The value or values of \code{X} are derived from the rules.
+#' The value of \code{u} is derived from the keyset that comes with the
+#' validation results: it is the not specified with \code{U} and \code{u}. If
+#' there are multiple candidate columns for \code{u}, they will be added
+#' comma-separated to the key set. In that case a single key may have more than
+#' four subkeys, and these will be stored as \code{[U, t, u1, u2,...,un, X]}.
+#' Cases where \code{u} is empty are treated as relating to all units (e.g. for
+#' a rule like \code{mean(x) < 3}).  The value or values of \code{X} are
+#' derived from the rules.
 #'
 #'
+#'
+#' @examples
+#' library(validate)
+#'
+#' data(SBS2000)
+#' rules <- validator(
+#'     total.rev >= 0 
+#'   , staff >= 0
+#'   , total.costs >= 0
+#'   , profit + total.costs == total.rev
+#'   , mean(profit) >= 10
+#' )
+#' # check the rules (we leave no room for machine rounding in this example)
+#' # To create an ESS report, it is essential to have an identifying key variable.
+#' result <- confront(SBS2000, rules, key="id", lin.ineq.eps=0, lin.eq.eps=0)
+#' json <- ess_validation_report(result, rules)
+#' 
+#' cat(json)
 #' @family  ess_report
 #'
 #'
@@ -277,7 +325,8 @@ microdata_validation_report <- function(validation, rules, U=NULL, t=NULL){
       # value
       , sprintf("%s", as.integer(dat$value))
   )
- paste0("[", paste(json, collapse=","),"]")
+  # Standard requires UTF-8
+  enc2utf8( paste0("[", paste(json, collapse=","),"]") )
   
 }
 
@@ -285,24 +334,29 @@ microdata_validation_report <- function(validation, rules, U=NULL, t=NULL){
 
 
 
-#' Write to validation report structure
+#' Write validation report structure to file.
 #'
 #' @param validation An object of class \code{\link[validate]{validation}}
-#' @param rules  \code{\link[validate]{validator}}, used in the creating the validation
-#' @param file A connection, or a character string naming the file to write to. Passed through
-#' to \code{\link[base]{write}}.
+#' @param rules  \code{\link[validate]{validator}}, used in the creating the
+#'   validation
+#' @param file A connection, or a character string naming the file to write to.
+#'   Passed through to \code{\link[base]{write}}.
+#' @param report_generator A function. Either \code{\link{ess_validation_report}} 
+#'   or \code{\link{microdata_validation_report}}.
 #' @param ... options passed to \link{ess_validation_report}.
 #' 
 #' @return The json string, invisibly
 #' 
 #' @family ess_report
 #' @export
-export_ess_validation_report <- function(validation, rules, file, ...){
+export_ess_validation_report <- function(validation
+    , rules
+    , file, report_generator = ess_validation_report, ...){
   stopifnot(inherits(validation,"validation"))
   stopifnot(inherits(rules, "validator"))
-  report <- ess_validation_report(validation, rules, ...) 
+  report <- report_generator(validation, rules, ...) 
   # note: standard forces UTF-8.
-  write(enc2utf8(report), file=file)
+  write(report, file=file)
   invisible(report)
 }
 
