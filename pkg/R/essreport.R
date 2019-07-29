@@ -435,11 +435,13 @@ ess_json_schema <- function(version=c("1.0.1","1.0.0")){
 is_ess_validation_report <- function(json, version=c("1.0.1","1.0.0")){
   version <- match.arg(version)
   schema <- ess_json_schema(version)
+ 
   tryCatch( jsonvalidate::json_validate(json, schema, verbose=TRUE)
         , error=function(e){
-          stopf("Validation against ESS json schema stopped.:\n %s", e$message)
+          res <- FALSE
+          attr(res, "errors") <- e$message
+          return(res)
   })
 }
 
-stopf <- function(fmt, ...) stop(sprintf(fmt,...), call.=FALSE)
 

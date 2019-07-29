@@ -21,4 +21,6 @@ cf <- confront(d,v,key="id")
 expect_true(is_ess_validation_report( ess_validation_report(cf, v) ))
 expect_true(is_ess_validation_report( microdata_validation_report(cf, v) ))
 
+expect_false(is_ess_validation_report("hihi_haha"))
+
 
