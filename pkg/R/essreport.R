@@ -165,10 +165,10 @@ ess_validation_report <- function(validation, rules){
       , event['trigger']
       # rule
       , dat$language
-      , dat$expression
+      , gsub('"','\\\\"',dat$expression)
       , dat$severity
       , dat$description
-      , dat$rule  # quasisource
+      , gsub('"','\\\\"',dat$rule)  # quasisource
       # data
       , dat$source
       , dat$target
@@ -314,10 +314,10 @@ microdata_validation_report <- function(validation, rules, U=NULL, t=NULL){
       , event['trigger']
       # rule
       , dat$language
-      , dat$expression
+      , gsub('"','\\\\"',dat$expression)
       , dat$severity
       , dat$description
-      , dat$rule  # quasisource
+      , gsub('"','\\\\"',dat$rule)  # quasisource
       # data
       , UtuX
       , rep('')
@@ -435,7 +435,8 @@ ess_json_schema <- function(version=c("1.0.1","1.0.0")){
 #' Check a json string against the ESS validation report json schema
 #'
 #' @param json \code{[character]} a \code{JSON} string.
-#' @param version \code{[character]} version of the ESS validation report definition.
+#' @param version \code{[character]} version of the ESS validation report
+#'   definition.
 #' 
 #' @return  A \code{logical} scalar. If \code{FALSE}, the error messages
 #' can be retrieved with \code{attr(value, "errors")}.
@@ -447,12 +448,14 @@ ess_json_schema <- function(version=c("1.0.1","1.0.0")){
 #' @family ess_report
 #'
 #' @export
-is_ess_report <- function(json, version=c("1.0.1","1.0.0")){
+is_ess_validation_report <- function(json, version=c("1.0.1","1.0.0")){
   version <- match.arg(version)
   schema <- ess_json_schema(version)
   tryCatch( jsonvalidate::json_validate(json, schema, verbose=TRUE)
         , error=function(e){
-          stop("Validation against ESS json schema stopped.:\n %s",e$message)
+          stopf("Validation against ESS json schema stopped.:\n %s", e$message)
   })
 }
+
+stopf <- function(fmt, ...) stop(sprintf(fmt,...), call.=FALSE)
 
