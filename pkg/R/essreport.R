@@ -8,7 +8,7 @@
 #' This function is geared for use with data in long format, as it is
 #' transferred between National Statistical Institutes and Eurostat.  Use
 #' \code{\link{microdata_validation_report}} to create an ESS validation report
-#' for data that is represented record-wise (i.e. with multiple variables per
+#' for data that is represented in record-wise (i.e. with multiple variables per
 #' record).
 #' 
 #' 
@@ -41,22 +41,6 @@
 #' we encode here in JSON format according to the \code{\link{ess_json_schema}}
 #' that defines the technical implementation of the above information model.
 #'
-#' Rule metadata is extracted from the \code{validator} object. Information on
-#' the event, data and resulting value is extracted from the \code{validation}
-#' object. An ESS validation report becomes application-independent when all
-#' (source and target) data points are identified semantically rather than with
-#' an abstract key.  The following  elements establish such an identification
-#' for a single data point:
-#'
-#' \itemize{
-#' \item{The \emph{population} of objects to which the data pertains.}
-#' \item{The identity of the \emph{measurement} in which the data values were observed 
-#' (e.g. a survey). By default the name of the data set under validation is 
-#' extracted from the validation object.}
-#' \item{The identity of the \emph{population unit} to which the value pertains.}
-#' \item{The \emph{variable} (attribute) that was measured.}
-#' }
-#' There are possibly many data points involved in a single validation.
 #'
 #' @section Extensions with respect to the ESS JSON report scheme:
 #' 
