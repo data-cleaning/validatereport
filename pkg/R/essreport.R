@@ -339,7 +339,6 @@ export_ess_validation_report <- function(validation
   stopifnot(inherits(validation,"validation"))
   stopifnot(inherits(rules, "validator"))
   report <- report_generator(validation, rules, ...) 
-  # note: standard forces UTF-8.
   write(report, file=file)
   invisible(report)
 }
