@@ -45,7 +45,7 @@ read_ess_validation_report <- function(file, check=TRUE
     message("The submitted text is not valid UTF-8. Continuing, but results could be b0rked.")
   }
   
-  if ( check && !(tst <- is_ess_report(txt, version=version)) ){
+  if ( check && !(tst <- is_ess_validation_report(txt, version=version)) ){
     msg1 <- sprintf(
       "%s does not comply with ESS validation report structure version %s"
       , file, version)
