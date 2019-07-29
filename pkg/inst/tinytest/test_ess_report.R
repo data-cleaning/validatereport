@@ -28,11 +28,12 @@ expect_false(is_ess_validation_report("hihi_haha"))
 # writing, reading.
 
 tmpfile <- tempfile()
-export_ess_validation_report(cf, v, file=tmpfile)
+expect_silent( export_ess_validation_report(cf, v, file=tmpfile) )
 str <- paste(readLines(tmpfile),"\n")
 expect_true(is_ess_validation_report(str))
 
 # parsing ESS report
-
+expect_silent(df <- read_ess_validation_report(tmpfile))
+expect_equal(nrow(df), 1)
 
 
