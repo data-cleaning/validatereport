@@ -280,7 +280,8 @@ microdata_validation_report <- function(validation, rules, U=NULL, t=NULL){
   vars <- sapply(variables(rules, as='list'),function(x) paste0('"',x,'"'))
   X <- vars[dat$name]
  
-  Utu <- sprintf("[ %s, %s, %s", U, t, u)
+  Utu <- if(identical(U,"")) sprintf("[ %s, %s",t, u) 
+         else sprintf("[ %s, %s, %s", U, t, u)
   UtuX <- sapply(seq_along(Utu), function(i){
      paste( sprintf("%s, %s ]",Utu[i], X[[i]]),collapse=", ")
   }) 
