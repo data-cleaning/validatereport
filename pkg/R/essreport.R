@@ -272,7 +272,7 @@ microdata_validation_report <- function(validation, rules, U=NULL, t=NULL){
   }
   
   keys <- dat[key_names]
-  for (i in ncol(keys)){
+  for (i in seq_len(ncol(keys)) ){
     keys[[i]] <- gsub('"NA"',"", paste('"',as.character(keys[[i]]) ,'"', sep=""))
   }
   u <- do.call(paste, c(keys, sep=", "))
